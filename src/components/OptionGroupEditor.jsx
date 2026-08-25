@@ -122,7 +122,7 @@ export default function OptionGroupEditor({ group, count, onClose, onSave }) {
                     <input
                       value={name}
                       onChange={(event) => setName(event.target.value)}
-                      placeholder="Choose your spirit"
+                      placeholder="Would you like a side?"
                       required
                     />
                   </label>
@@ -143,7 +143,7 @@ export default function OptionGroupEditor({ group, count, onClose, onSave }) {
                     rows="2"
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
-                    placeholder="One standard pour is included."
+                    placeholder="Choose up to two sides for your meal."
                   />
                 </label>
               </section>
@@ -159,7 +159,7 @@ export default function OptionGroupEditor({ group, count, onClose, onSave }) {
                     onClick={() => setSelectionMode("single")}
                   >
                     <strong>Choose one</strong>
-                    <small>Best for spirit, size or mixer</small>
+                    <small>Best for sizes, proteins or preparation styles</small>
                   </button>
                   <button
                     type="button"
@@ -167,7 +167,7 @@ export default function OptionGroupEditor({ group, count, onClose, onSave }) {
                     onClick={() => setSelectionMode("multiple")}
                   >
                     <strong>Choose multiple</strong>
-                    <small>Best for extras and additional shots</small>
+                    <small>Best for sides, toppings and extras</small>
                   </button>
                 </div>
                 <div className="rule-controls">
@@ -231,7 +231,7 @@ export default function OptionGroupEditor({ group, count, onClose, onSave }) {
                         onChange={(event) =>
                           updateOption(index, "name", event.target.value)
                         }
-                        placeholder="Vodka"
+                        placeholder="Fried plantain"
                         required
                       />
                       <input
@@ -240,7 +240,7 @@ export default function OptionGroupEditor({ group, count, onClose, onSave }) {
                         onChange={(event) =>
                           updateOption(index, "description", event.target.value)
                         }
-                        placeholder="House vodka"
+                        placeholder="Sweet, caramelized plantain"
                       />
                       <label className="option-price-input">
                         <span>+$</span>

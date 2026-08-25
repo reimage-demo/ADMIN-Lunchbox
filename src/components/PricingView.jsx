@@ -8,14 +8,14 @@ export default function PricingView({ groups, onAdd, onEdit, onDuplicate, onDele
     <>
       <div className="view-tools">
         <p className="subtext">
-          Manage reusable spirits, mixers, extra shots and other paid options.
+          Manage reusable sides, sizes, toppings and other menu add-ons.
         </p>
         <button className="primary-button compact" onClick={onAdd}>
           + Add option group
         </button>
       </div>
       <div className="pricing-guide">
-        <div><b>1</b><span><strong>Create a group</strong><small>Example: Choose your spirit</small></span></div>
+        <div><b>1</b><span><strong>Create a group</strong><small>Example: Would you like a side?</small></span></div>
         <div><b>2</b><span><strong>Add customer choices</strong><small>Each choice can add to the price</small></span></div>
         <div><b>3</b><span><strong>Attach it to menu items</strong><small>Use the Menu editor to choose where it appears</small></span></div>
       </div>
@@ -64,7 +64,7 @@ export default function PricingView({ groups, onAdd, onEdit, onDuplicate, onDele
           ))
         ) : (
           <div className="empty">
-            No pricing groups yet. Add spirits, mixers or extras to get started.
+            No option groups yet. Add sides, sizes, toppings or extras to get started.
           </div>
         )}
       </div>
