@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const DEFAULT_LOCATION_NAME = "Lunch Box";
 const DEFAULT_ADDRESS = "104 Baltimore St, Hartford, CT 06112";
@@ -37,15 +37,21 @@ const statusOptions = [
   ["closed", "Closed for today", "Keep the stop visible but mark service closed."],
 ];
 
-export default function TruckLocationView({ location, onSave }) {
+const checkinRequested =
+  new URLSearchParams(window.location.search).get("checkin") === "1";
+let automaticCheckinStarted = false;
+
+export default function TruckLocationView({ location, onReverseGeocode, onSave }) {
   const [form, setForm] = useState(emptyLocation);
   const [locating, setLocating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [addressAttribution, setAddressAttribution] = useState("");
+  const formTouched = useRef(false);
 
   useEffect(() => {
-    if (!location) return;
+    if (!location || formTouched.current) return;
     setForm({
       ...emptyLocation,
       ...location,
@@ -68,8 +74,10 @@ export default function TruckLocationView({ location, onSave }) {
   }, [form.address, form.latitude, form.longitude]);
 
   const nfcUrl = `${window.location.origin}${window.location.pathname}?view=location&checkin=1`;
-  const update = (field, value) =>
+  const update = (field, value) => {
+    formTouched.current = true;
     setForm((current) => ({ ...current, [field]: value }));
+  };
 
   function captureLocation() {
     setError("");
@@ -78,25 +86,55 @@ export default function TruckLocationView({ location, onSave }) {
       setError("This device cannot provide its location. Enter the address manually.");
       return;
     }
+    formTouched.current = true;
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        update("latitude", Number(coords.latitude.toFixed(6)));
+      async ({ coords }) => {
+        const latitude = Number(coords.latitude.toFixed(6));
+        const longitude = Number(coords.longitude.toFixed(6));
         setForm((current) => ({
           ...current,
-          latitude: Number(coords.latitude.toFixed(6)),
-          longitude: Number(coords.longitude.toFixed(6)),
+          latitude,
+          longitude,
         }));
-        setMessage("Phone location captured. Confirm the address and map pin before publishing.");
+        setMessage("Phone location captured. Finding the street address…");
+        try {
+          const result = await onReverseGeocode({ latitude, longitude });
+          setForm((current) => ({ ...current, address: result.address }));
+          setAddressAttribution(result.attribution || "");
+          const accuracy = Math.round(coords.accuracy);
+          setMessage(
+            `Address found${Number.isFinite(accuracy) ? ` (GPS accuracy about ${accuracy} m)` : ""}. Confirm the address and map pin, then publish.`,
+          );
+        } catch (err) {
+          setError(
+            err?.data?.message ||
+              err?.message ||
+              "The coordinates were captured, but the address lookup failed. Enter the address manually.",
+          );
+        } finally {
+          setLocating(false);
+        }
+      },
+      (positionError) => {
+        const detail =
+          positionError.code === positionError.PERMISSION_DENIED
+            ? "Location permission was denied. Allow location access in this browser and try again."
+            : positionError.code === positionError.TIMEOUT
+              ? "The phone took too long to find its location. Move near a window and try again."
+              : "The phone could not determine its location. Try again or enter the address manually.";
+        setError(detail);
         setLocating(false);
       },
-      () => {
-        setError("Location access was unavailable. Allow location access or enter the address manually.");
-        setLocating(false);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 },
     );
   }
+
+  useEffect(() => {
+    if (!checkinRequested || automaticCheckinStarted) return;
+    automaticCheckinStarted = true;
+    captureLocation();
+  }, []);
 
   async function submit(event) {
     event.preventDefault();
@@ -150,6 +188,7 @@ export default function TruckLocationView({ location, onSave }) {
             <label>Latitude<input type="number" step="any" value={form.latitude} onChange={(event) => update("latitude", event.target.value)} placeholder="Captured from phone" /></label>
             <label>Longitude<input type="number" step="any" value={form.longitude} onChange={(event) => update("longitude", event.target.value)} placeholder="Captured from phone" /></label>
           </div>
+          {addressAttribution && <small className="address-attribution">{addressAttribution}</small>}
           {mapsUrl && <a className="map-preview-link" href={mapsUrl} target="_blank" rel="noreferrer">Check this pin in Google Maps ↗</a>}
         </section>
 
@@ -190,10 +229,10 @@ export default function TruckLocationView({ location, onSave }) {
         <section className="location-panel nfc-panel">
           <p className="eyebrow dark">NFC shortcut</p>
           <h3>Tap, check in, publish.</h3>
-          <p>Program the tag inside the truck with this protected admin link. The tag opens this screen; the operator’s phone supplies the GPS location.</p>
+          <p>Program the tag inside the truck with this protected admin link. A tap opens this screen and starts the phone’s location prompt automatically.</p>
           <code>{nfcUrl}</code>
           <button type="button" className="secondary-button" onClick={copyNfcLink}>Copy NFC check-in link</button>
-          <small>The operator will still need to sign in and confirm before anything changes publicly.</small>
+          <small>Copy this link from the live admin site, not localhost. The operator must sign in, allow location access, confirm the address, and publish before anything changes publicly.</small>
         </section>
         <section className="location-panel location-preview-panel">
           <p className="eyebrow dark">Website preview</p>

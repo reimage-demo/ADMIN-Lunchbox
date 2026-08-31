@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { useAction, useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { anyApi } from "convex/server";
 import LoginView from "./components/LoginView";
 import Sidebar from "./components/Sidebar";
@@ -147,6 +147,7 @@ export default function App() {
   const updateCoupon = useMutation(api.coupons.update);
   const removeCoupon = useMutation(api.coupons.remove);
   const saveTruckLocation = useMutation(api.truckLocations.saveCurrent);
+  const reverseGeocode = useAction(api.truckLocations.reverseGeocode);
 
   const notify = (message) => {
     setToast(message);
@@ -580,6 +581,9 @@ export default function App() {
             {view === "location" && (
               <TruckLocationView
                 location={truckLocation}
+                onReverseGeocode={(coordinates) =>
+                  reverseGeocode({ sessionToken: token, ...coordinates })
+                }
                 onSave={async (values) => {
                   await saveTruckLocation({ sessionToken: token, ...values });
                   notify("Truck location published");

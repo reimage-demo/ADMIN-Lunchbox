@@ -76,6 +76,7 @@
 .location-time-grid label { margin: 0; }
 .location-form-grid label > span { color: var(--muted); font-weight: 500; }
 .location-wide { grid-column: 1 / -1; }
+.address-attribution { display: block; margin-top: 12px; color: var(--muted); }
 .map-preview-link { display: inline-flex; margin-top: 17px; color: var(--green); font-weight: 800; font-size: 12px; }
 .location-switches { margin-top: 22px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .location-switches label {
