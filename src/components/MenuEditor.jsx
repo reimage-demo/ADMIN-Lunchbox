@@ -31,6 +31,7 @@ export default function MenuEditor({
   );
   const [description, setDescription] = useState(item?.description || "");
   const [price, setPrice] = useState(item?.price ?? 0);
+  const [sizes, setSizes] = useState(item?.sizes || []);
   const [available, setAvailable] = useState(item?.isAvailable ?? true);
   const [featured, setFeatured] = useState(item?.isFeatured ?? false);
   const [drinkOfNight, setDrinkOfNight] = useState(
@@ -65,7 +66,8 @@ export default function MenuEditor({
         name: name.trim(),
         category: category.trim(),
         description: description.trim(),
-        price,
+        price: sizes.length ? Math.min(...sizes.map((size) => size.price)) : price,
+        sizes,
         accent: data.get("accent").trim() || undefined,
         isAvailable: available,
         isFeatured: featured,
@@ -199,6 +201,17 @@ export default function MenuEditor({
                     />
                   </label>
                 </div>
+                <fieldset className="size-pricing-editor">
+                  <legend>Size prices</legend>
+                  <p>Enable the sizes offered for this item and enter each full price. Leave all unchecked for one standard portion.</p>
+                  {["Small", "Medium", "Large"].map((sizeName) => {
+                    const size = sizes.find((entry) => entry.name === sizeName);
+                    return <div className="size-price-row" key={sizeName}>
+                      <label><input type="checkbox" checked={Boolean(size)} onChange={(event) => setSizes((current) => event.target.checked ? [...current, { name: sizeName, price }].sort((a, b) => ["Small", "Medium", "Large"].indexOf(a.name) - ["Small", "Medium", "Large"].indexOf(b.name)) : current.filter((entry) => entry.name !== sizeName))} />{sizeName}</label>
+                      {size && <CurrencyInput aria-label={`${sizeName} full price in dollars`} value={size.price} required onChange={(value) => setSizes((current) => current.map((entry) => entry.name === sizeName ? { ...entry, price: value } : entry))} />}
+                    </div>;
+                  })}
+                </fieldset>
                 <label className="starting-price-checkbox">
                   <input
                     type="checkbox"
@@ -397,8 +410,8 @@ export default function MenuEditor({
               <span className="summary-category">{category || "Category"}</span>
               <h3>{name || "Item name"}</h3>
               <strong className="summary-price">
-                {startingPrice ? "Starting at " : ""}
-                {money(price)}
+                {startingPrice || sizes.length > 1 ? "Starting at " : ""}
+                {money(sizes.length ? Math.min(...sizes.map((size) => size.price)) : price)}
               </strong>
               <p>{description || "The item description appears here."}</p>
               <div className="summary-badges">

@@ -391,6 +391,7 @@ export default function App() {
       category: item.category,
       description: item.description,
       price: item.price,
+      sizes: item.sizes,
       ...(item.accent ? { accent: item.accent } : {}),
       ...(item.imageStorageId
         ? { imageStorageId: item.imageStorageId }
