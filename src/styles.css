@@ -105,9 +105,31 @@
 .location-status-grid label.selected { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); background: rgba(237, 28, 36, .035); }
 .location-status-grid input { position: absolute; opacity: 0; }
 .location-status-grid small { color: var(--muted); font-weight: 500; }
-.location-message { min-height: 22px; margin: 0; color: #137a40; text-align: center; font-weight: 700; }
-.location-message.error { color: var(--red); }
-.location-publish { width: min(520px, 100%); margin: 0 auto; }
+.location-publish-actions { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+.location-publish-actions p { margin: 0 0 12px; color: var(--muted); }
+.location-publish { width: 100%; }
+.location-notification {
+  position: fixed;
+  top: max(20px, env(safe-area-inset-top));
+  right: 20px;
+  z-index: 2000;
+  width: min(420px, calc(100vw - 40px));
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid #137a40;
+  border-left-width: 5px;
+  border-radius: 14px;
+  background: #fff;
+  color: #163d27;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .22);
+}
+.location-notification.error { border-color: var(--red); color: #9b171c; }
+.location-notification p { margin: 6px 0 0; overflow-wrap: anywhere; }
+.location-notification button { flex-shrink: 0; margin-left: auto; min-width: 44px; min-height: 44px; border: 0; border-radius: 8px; background: #f4f1ed; color: inherit; font-size: 24px; cursor: pointer; }
 .nfc-panel code { margin: 18px 0; padding: 13px; display: block; overflow-wrap: anywhere; border-radius: 10px; background: #f4f1ed; font-size: 11px; }
 .nfc-panel .secondary-button { width: 100%; }
 .nfc-panel > small { margin-top: 14px; display: block; color: var(--muted); }

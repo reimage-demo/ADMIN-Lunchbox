@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { locationPayload, locationError } from "../locationPayload";
 
 const DEFAULT_LOCATION_NAME = "Lunch Box";
 const DEFAULT_ADDRESS = "104 Baltimore St, Hartford, CT 06112";
@@ -108,9 +109,7 @@ export default function TruckLocationView({ location, onReverseGeocode, onSave }
           );
         } catch (err) {
           setError(
-            err?.data?.message ||
-              err?.message ||
-              "The coordinates were captured, but the address lookup failed. Enter the address manually.",
+            locationError(err, "The coordinates were captured, but the address lookup failed. Enter the address manually."),
           );
         } finally {
           setLocating(false);
@@ -138,31 +137,29 @@ export default function TruckLocationView({ location, onReverseGeocode, onSave }
 
   async function submit(event) {
     event.preventDefault();
+    if (saving || locating) return;
     setSaving(true);
     setError("");
     setMessage("");
     try {
-      await onSave({
-        ...form,
-        latitude: form.latitude === "" ? undefined : Number(form.latitude),
-        longitude: form.longitude === "" ? undefined : Number(form.longitude),
-        locationNotes: form.locationNotes.trim() || undefined,
-        doorDashUrl: form.doorDashUrl.trim() || undefined,
-        uberEatsUrl: form.uberEatsUrl.trim() || undefined,
-        prepTimeMinutes: Number(form.prepTimeMinutes),
-        confirmLocation: true,
-      });
+      await onSave(locationPayload(form));
       setMessage("Today’s truck location is live on the website.");
     } catch (err) {
-      setError(err?.data?.message || err?.message || "Could not publish this location.");
+      setError(locationError(err, "Location was not published. Check your connection and try again. If it keeps failing, sign in again."));
     } finally {
       setSaving(false);
     }
   }
 
   async function copyNfcLink() {
-    await navigator.clipboard.writeText(nfcUrl);
-    setMessage("NFC check-in link copied.");
+    setError("");
+    setMessage("");
+    try {
+      await navigator.clipboard.writeText(nfcUrl);
+      setMessage("NFC check-in link copied.");
+    } catch {
+      setError("Could not copy the link. Select and copy the NFC link manually.");
+    }
   }
 
   return (
@@ -174,7 +171,7 @@ export default function TruckLocationView({ location, onReverseGeocode, onSave }
             <h2>Check in the truck</h2>
             <p>Capture the parked truck’s location, confirm the details, and publish one reliable pickup point.</p>
           </div>
-          <button type="button" className="capture-location-button" onClick={captureLocation} disabled={locating}>
+          <button type="button" className="capture-location-button" onClick={captureLocation} disabled={locating || saving}>
             {locating ? "Finding the truck…" : "Use this phone’s location"}
           </button>
         </section>
@@ -190,6 +187,10 @@ export default function TruckLocationView({ location, onReverseGeocode, onSave }
           </div>
           {addressAttribution && <small className="address-attribution">{addressAttribution}</small>}
           {mapsUrl && <a className="map-preview-link" href={mapsUrl} target="_blank" rel="noreferrer">Check this pin in Google Maps ↗</a>}
+          <div className="location-publish-actions">
+            <p>Confirm this address and publish it with the service hours and settings below.</p>
+            <button type="submit" className="primary-button location-publish" disabled={saving || locating}>{saving ? "Publishing…" : "Confirm and publish location"}</button>
+          </div>
         </section>
 
         <section className="location-panel">
@@ -221,10 +222,18 @@ export default function TruckLocationView({ location, onReverseGeocode, onSave }
           </div>
         </section>
 
-        <p className={`location-message ${error ? "error" : ""}`} role="status">{error || message}</p>
-        <button className="primary-button location-publish" disabled={saving}>{saving ? "Publishing…" : "Confirm and publish today’s location"}</button>
+
       </form>
 
+      {(saving || locating || error || message) && (
+        <div className={`location-notification ${error ? "error" : ""}`}>
+          <div role={error ? "alert" : "status"} aria-live={error ? "assertive" : "polite"} aria-atomic="true">
+            <strong>{saving ? "Publishing location…" : locating ? "Finding your location…" : error ? "Action needed" : "Success"}</strong>
+            <p>{saving ? "Please wait for confirmation." : error || message || "Waiting for the device’s location."}</p>
+          </div>
+          {!saving && !locating && <button type="button" aria-label="Dismiss notification" onClick={() => { setError(""); setMessage(""); }}>×</button>}
+        </div>
+      )}
       <aside className="location-admin-aside">
         <section className="location-panel nfc-panel">
           <p className="eyebrow dark">NFC shortcut</p>

@@ -587,7 +587,6 @@ export default function App() {
                 }
                 onSave={async (values) => {
                   await saveTruckLocation({ sessionToken: token, ...values });
-                  notify("Truck location published");
                 }}
               />
             )}
