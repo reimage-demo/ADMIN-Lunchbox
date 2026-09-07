@@ -33,6 +33,8 @@ export default function MenuEditor({
   const [price, setPrice] = useState(item?.price ?? 0);
   const [sizes, setSizes] = useState(item?.sizes || []);
   const [available, setAvailable] = useState(item?.isAvailable ?? true);
+  const [comingSoon, setComingSoon] = useState(item?.isComingSoon ?? false);
+  const singleSizeBox = !bottleService && category.trim().toLowerCase() === "lunch boxes";
   const [featured, setFeatured] = useState(item?.isFeatured ?? false);
   const [drinkOfNight, setDrinkOfNight] = useState(
     item?.isDrinkOfNight ?? false,
@@ -66,15 +68,16 @@ export default function MenuEditor({
         name: name.trim(),
         category: category.trim(),
         description: description.trim(),
-        price: sizes.length ? Math.min(...sizes.map((size) => size.price)) : price,
-        sizes,
+        price: !singleSizeBox && sizes.length ? Math.min(...sizes.map((size) => size.price)) : price,
+        sizes: singleSizeBox ? [] : sizes,
         accent: data.get("accent").trim() || undefined,
-        isAvailable: available,
+        isAvailable: available && !comingSoon,
+        isComingSoon: comingSoon,
         isFeatured: featured,
         isDrinkOfNight: drinkOfNight,
         isCustomDrink: bottleService ? false : customDrink,
         isBottleService: bottleService,
-        showsStartingPrice: startingPrice,
+        showsStartingPrice: singleSizeBox ? false : startingPrice,
         optionGroupIds: selectedGroups,
         sortOrder: item?.sortOrder ?? count + 1,
         addOns: item?.addOns || [],
@@ -201,7 +204,7 @@ export default function MenuEditor({
                     />
                   </label>
                 </div>
-                <fieldset className="size-pricing-editor">
+                <fieldset className="size-pricing-editor" disabled={singleSizeBox} hidden={singleSizeBox}>
                   <legend>Size prices</legend>
                   <p>Enable the sizes offered for this item and enter each full price. Leave all unchecked for one standard portion.</p>
                   {["Small", "Medium", "Large"].map((sizeName) => {
@@ -212,7 +215,7 @@ export default function MenuEditor({
                     </div>;
                   })}
                 </fieldset>
-                <label className="starting-price-checkbox">
+                <label className="starting-price-checkbox" hidden={singleSizeBox}>
                   <input
                     type="checkbox"
                     checked={startingPrice}
@@ -284,17 +287,21 @@ export default function MenuEditor({
                 </div>
                 <div className="menu-visibility-options visibility-cards">
                   <label className="switch-label">
+                    <span><strong>Coming soon</strong><small>Show a preview without accepting orders.</small></span>
+                    <input type="checkbox" checked={comingSoon} onChange={(event) => { setComingSoon(event.target.checked); if (event.target.checked) setAvailable(false); }} />
+                    <span className="switch" />
+                  </label>
+                  <label className="switch-label">
                     <span>
-                      <strong>Show on customer menu</strong>
+                      <strong>Available to order</strong>
                       <small>
-                        Turn this off to keep the item in admin but hide it from
-                        customers
+                        Turn off to hide the item, or use Coming soon below to show a preview.
                       </small>
                     </span>
                     <input
                       type="checkbox"
-                      checked={available}
-                      onChange={(event) => setAvailable(event.target.checked)}
+                      checked={available && !comingSoon}
+                      onChange={(event) => { setAvailable(event.target.checked); if (event.target.checked) setComingSoon(false); }}
                     />
                     <span className="switch" />
                   </label>

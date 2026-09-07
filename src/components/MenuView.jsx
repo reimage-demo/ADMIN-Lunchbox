@@ -252,7 +252,7 @@ export default function MenuView({
         <div className="admin-card-meta">
           <span>{item.category}</span>
           <span>
-            {item.isAvailable ? "Visible on menu" : "Hidden from menu"}
+            {item.isComingSoon ? "Coming soon · not orderable" : item.isAvailable ? "Visible on menu" : "Hidden from menu"}
           </span>
           {item.isFeatured && (
             <span className="admin-feature-tag">Featured</span>

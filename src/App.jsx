@@ -399,6 +399,7 @@ export default function App() {
           ? { imageUrl: item.imageUrl }
           : {}),
       isAvailable,
+      isComingSoon: false,
       isFeatured: item.isFeatured ?? false,
       isDrinkOfNight: item.isDrinkOfNight ?? false,
       isCustomDrink: item.isCustomDrink ?? false,
